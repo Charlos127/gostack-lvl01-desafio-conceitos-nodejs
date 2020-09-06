@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 
-const { uuid } = require('uuidv4');
+const { uuid, isUuid } = require('uuidv4');
 
 const app = express();
 
@@ -9,6 +9,24 @@ app.use(express.json());
 app.use(cors());
 
 const repositories = [];
+
+function validateRepositorieId(request, response, next){
+  const {id} = request.params;
+
+  if(!isUuid(id)){
+    return response.status(400).send('Repositorie not found');
+  }
+
+  const repoIndex = repositories.findIndex(repositorie => repositorie.id === id);
+
+  if(repoIndex <0){
+    return response.status(400).send('Repositorie not found');
+  }  
+
+  return next(id);
+};
+
+app.use("repositories/:id" ,validateRepositorieId);
 
 app.get("/repositories", (request, response) => {
   return response.status(200).send(repositories);
@@ -73,7 +91,7 @@ app.post("/repositories/:id/like", (request, response) => {
 
   const repoIndex = repositories.findIndex(repositorie => repositorie.id === id);
 
-  if(repoIndex <0){
+  if(repoIndex < 0){
     return response.status(400).send('Repositorie not found');
   }
 
